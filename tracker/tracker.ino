@@ -3,14 +3,9 @@
  * Radio Tracking Code for the Arduino
  * 
  * Author: Ameya Daigavane
+ * Code fragments taken from DeviceExample.ino in the TinyGPS++ library.
  */
 
-
-/*
-   This sample sketch demonstrates the normal use of a TinyGPS++ (TinyGPSPlus) object.
-   It requires the use of SoftwareSerial, and assumes that you have a
-   4800-baud serial GPS device hooked up on pins 4(rx) and 3(tx).
-*/
 #include <TinyGPS++.h>
 #include <SoftwareSerial.h>
 
@@ -26,10 +21,8 @@ SoftwareSerial ss(RXPin, TXPin);
 void setup() {
   Serial.begin(115200);
   ss.begin(GPSBaud);
-  Serial.println(F("DeviceExample.ino"));
-  Serial.println(F("A simple demonstration of TinyGPS++ with an attached GPS module"));
-  Serial.print(F("Testing TinyGPS++ library v. ")); Serial.println(TinyGPSPlus::libraryVersion());
-  Serial.println(F("by Mikal Hart"));
+  Serial.println(F("The Space Balloon"));
+  Serial.println(F("by Equinox, IIT Guwahati"));
   Serial.println();
 }
 
