@@ -1,17 +1,13 @@
-/*  NTX2 Radio Test Part 2
- 
-    Transmits data via RTTY with a checksum.
- 
-    Created 2012 by M0UPU as part of a UKHAS Guide on linking NTX2 Modules to Arduino.
-    RTTY code from Rob Harrison Icarus Project. 
-    http://ukhas.org.uk
+/*  
+ *  GPS Tracker + Radio Transmitter
+ *  Ameya Daigavane
+ *  Code Snippets from UKHAS.
 */ 
  
 #define RADIOPIN 13
  
 #include <string.h>
 #include <util/crc16.h>
-
 #include <TinyGPS++.h>
 #include <SoftwareSerial.h>
 
@@ -24,27 +20,41 @@ TinyGPSPlus gps;
 // The serial connection to the GPS device
 SoftwareSerial ss(RXPin, TXPin);
 
-char datastring[80];
+char infostring[1000];
  
 void setup() {                
-  pinMode(RADIOPIN,OUTPUT);
+  Serial.begin(115200);
+  ss.begin(GPSBaud);
+  Serial.println(F("The Space Balloon"));
+  Serial.println(F("by Equinox, IIT Guwahati"));
+  Serial.println();
+  
+  pinMode(RADIOPIN,OUTPUT); 
 }
  
 void loop() {
+  while(ss.available() > 0){
+    if(gps.encode(ss.read())){
+        // Get GPS data and store in infostring.
+        getGPSInfo();
 
-//  while(ss.available() > 0){
-//    if(gps.encode(ss.read())){
-//        //char * datastring = displayInfo();
-        sprintf(datastring, "Ameya Rox"); // Puts the text in the datastring
-        unsigned int CHECKSUM = gps_CRC16_checksum(datastring);  // Calculates the checksum for this datastring
+        // Compute checksum.
+        unsigned int checksum_val = gps_CRC16_checksum(infostring);  // Calculates the checksum for this datastring
         char checksum_str[6];
-        sprintf(checksum_str, "*%04X\n", CHECKSUM);
-        strcat(datastring,checksum_str);
-       
-        rtty_txstring (datastring);
+        sprintf(checksum_str, "*%04X\n", checksum_val);
+        strcat(infostring, " ");
+        strcat(infostring, checksum_str);
+
+        // Send over RTTY.
+        rtty_txstring(infostring);
+
+        // Print to serial monitor, to verify.
+        Serial.println(infostring);
+        
+        // Wait for a while.
         delay(2000);
-  //  }   
-  //}
+    }   
+  }
 }
  
  
@@ -139,44 +149,69 @@ uint16_t gps_CRC16_checksum (char *string)
   return crc;
 }    
 
-char* displayInfo() {
-  Serial.print(F("Location: ")); 
-  if (gps.location.isValid()) {
-    Serial.print(gps.location.lat(), 6);
-    Serial.print(F(","));
-    Serial.print(gps.location.lng(), 6);
+
+void getGPSInfo() {
+  sprintf(infostring, "Location: "); 
+
+  // Buffer string for converting values.
+    char buff[10];
+
+  if (gps.location.isValid()) {    
+    // Latitude.
+    dtostrf(gps.location.lat(), 4, 6, buff); 
+    strcat(infostring, buff);
+
+    // Separator.
+    strcat(infostring, ", ");
+
+    // Longitude.
+    dtostrf(gps.location.lng(), 4, 6, buff); 
+    strcat(infostring, buff);
+    
   } else {
-    Serial.print(F("INVALID"));
+    strcat(infostring, "INVALID");
   }
 
-  Serial.print(F("  Date/Time: "));
+  strcat(infostring, "  Date/Time (UTC): ");
   if (gps.date.isValid()) {
-    Serial.print(gps.date.month());
-    Serial.print(F("/"));
-    Serial.print(gps.date.day());
-    Serial.print(F("/"));
-    Serial.print(gps.date.year());
+    // Date.
+    itoa(gps.date.day(), buff, 10);
+    strcat(infostring, buff);
+    strcat(infostring, "/");
+
+    // Month.
+    itoa(gps.date.month(), buff, 10);
+    strcat(infostring, buff);
+    strcat(infostring, "/");
+
+    // Year.
+    itoa(gps.date.year(), buff, 10);
+    strcat(infostring, buff);
+    strcat(infostring, "  ");
   } else {
-    Serial.print(F("INVALID"));
+    strcat(infostring, "INVALID  ");  
   }
 
-  Serial.print(F(" "));
   if (gps.time.isValid()) {
-    if (gps.time.hour() < 10) Serial.print(F("0"));
-    Serial.print(gps.time.hour());
-    Serial.print(F(":"));
-    if (gps.time.minute() < 10) Serial.print(F("0"));
-    Serial.print(gps.time.minute());
-    Serial.print(F(":"));
-    if (gps.time.second() < 10) Serial.print(F("0"));
-    Serial.print(gps.time.second());
-    Serial.print(F("."));
-    if (gps.time.centisecond() < 10) Serial.print(F("0"));
-    Serial.print(gps.time.centisecond());
-  } else {
-    Serial.print(F("INVALID"));
-  }
-  Serial.println();
+    if (gps.time.hour() < 10) strcat(infostring, "0");
+    itoa(gps.time.hour(), buff, 10);
+    strcat(infostring, buff);
 
-  return "1213";
+    strcat(infostring, ":");
+    if (gps.time.minute() < 10) strcat(infostring, "0");
+    itoa(gps.time.minute(), buff, 10);
+    strcat(infostring, buff);
+
+    strcat(infostring, ":");
+    if (gps.time.second() < 10) strcat(infostring, "0");
+    itoa(gps.time.second(), buff, 10);
+    strcat(infostring, buff);
+    
+    strcat(infostring, ".");  
+    if (gps.time.centisecond() < 10) strcat(infostring, "0");
+    itoa(gps.time.centisecond(), buff, 10);
+    strcat(infostring, buff);
+  } else {
+    strcat(infostring, "INVALID.");  
+  }
 }

@@ -18,6 +18,9 @@ TinyGPSPlus gps;
 // The serial connection to the GPS device
 SoftwareSerial ss(RXPin, TXPin);
 
+// Stores the GPS info as a string
+char infostring[1000];
+
 void setup() {
   Serial.begin(115200);
   ss.begin(GPSBaud);
@@ -29,8 +32,11 @@ void setup() {
 void loop() {
   // This sketch displays information every time a new sentence is correctly encoded.
   while (ss.available() > 0)
-    if (gps.encode(ss.read()))
+    if (gps.encode(ss.read()));
+      getGPSInfo();
       displayInfo();
+      delay(2000);
+      
   if (millis() > 5000 && gps.charsProcessed() < 10) {
     Serial.println(F("No GPS detected: check wiring."));
     while(true);
@@ -38,41 +44,71 @@ void loop() {
 }
 
 void displayInfo() {
-  Serial.print(F("Location: ")); 
-  if (gps.location.isValid()) {
-    Serial.print(gps.location.lat(), 6);
-    Serial.print(F(","));
-    Serial.print(gps.location.lng(), 6);
+  Serial.println(infostring);
+}
+
+void getGPSInfo() {
+  sprintf(infostring, "Location: "); 
+
+  // Buffer string for converting values.
+    char buff[10];
+
+  if (gps.location.isValid()) {    
+    // Latitude.
+    dtostrf(gps.location.lat(), 4, 6, buff); 
+    strcat(infostring, buff);
+
+    // Separator.
+    strcat(infostring, ", ");
+
+    // Longitude.
+    dtostrf(gps.location.lng(), 4, 6, buff); 
+    strcat(infostring, buff);
+    
   } else {
-    Serial.print(F("INVALID"));
+    strcat(infostring, "INVALID");
   }
 
-  Serial.print(F("  Date/Time: "));
+  strcat(infostring, "  Date/Time (UTC): ");
   if (gps.date.isValid()) {
-    Serial.print(gps.date.month());
-    Serial.print(F("/"));
-    Serial.print(gps.date.day());
-    Serial.print(F("/"));
-    Serial.print(gps.date.year());
+    // Date.
+    itoa(gps.date.day(), buff, 10);
+    strcat(infostring, buff);
+    strcat(infostring, "/");
+
+    // Month.
+    itoa(gps.date.month(), buff, 10);
+    strcat(infostring, buff);
+    strcat(infostring, "/");
+
+    // Year.
+    itoa(gps.date.year(), buff, 10);
+    strcat(infostring, buff);
+    strcat(infostring, "  ");
   } else {
-    Serial.print(F("INVALID"));
+    strcat(infostring, "INVALID  ");  
   }
 
-  Serial.print(F(" "));
   if (gps.time.isValid()) {
-    if (gps.time.hour() < 10) Serial.print(F("0"));
-    Serial.print(gps.time.hour());
-    Serial.print(F(":"));
-    if (gps.time.minute() < 10) Serial.print(F("0"));
-    Serial.print(gps.time.minute());
-    Serial.print(F(":"));
-    if (gps.time.second() < 10) Serial.print(F("0"));
-    Serial.print(gps.time.second());
-    Serial.print(F("."));
-    if (gps.time.centisecond() < 10) Serial.print(F("0"));
-    Serial.print(gps.time.centisecond());
+    if (gps.time.hour() < 10) strcat(infostring, "0");
+    itoa(gps.time.hour(), buff, 10);
+    strcat(infostring, buff);
+
+    strcat(infostring, ":");
+    if (gps.time.minute() < 10) strcat(infostring, "0");
+    itoa(gps.time.minute(), buff, 10);
+    strcat(infostring, buff);
+
+    strcat(infostring, ":");
+    if (gps.time.second() < 10) strcat(infostring, "0");
+    itoa(gps.time.second(), buff, 10);
+    strcat(infostring, buff);
+    
+    strcat(infostring, ".");  
+    if (gps.time.centisecond() < 10) strcat(infostring, "0");
+    itoa(gps.time.centisecond(), buff, 10);
+    strcat(infostring, buff);
   } else {
-    Serial.print(F("INVALID"));
+    strcat(infostring, "INVALID.");  
   }
-  Serial.println();
 }
