@@ -1,7 +1,8 @@
 /*  
  *  GPS Tracker + Radio Transmitter
- *  Ameya Daigavane
- *  Code Snippets from UKHAS.
+ *  
+ *  Author: Ameya Daigavane
+ *  Code snippets from UKHAS (https://ukhas.org.uk/guides:linkingarduinotontx2) and DeviceExample.ino in the TinyGPS++ library.
 */ 
  
 #define RADIOPIN 13
