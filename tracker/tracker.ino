@@ -48,7 +48,7 @@ void displayInfo() {
 }
 
 void getGPSInfo() {
-  sprintf(infostring, "Location: "); 
+  sprintf(infostring, "Loc: "); 
 
   // Buffer string for converting values.
     char buff[10];
@@ -66,10 +66,10 @@ void getGPSInfo() {
     strcat(infostring, buff);
     
   } else {
-    strcat(infostring, "INVALID");
+    strcat(infostring, "--");
   }
 
-  strcat(infostring, "  Date/Time (UTC): ");
+  strcat(infostring, "  DT (UTC): ");
   if (gps.date.isValid()) {
     // Date.
     itoa(gps.date.day(), buff, 10);
@@ -86,7 +86,7 @@ void getGPSInfo() {
     strcat(infostring, buff);
     strcat(infostring, "  ");
   } else {
-    strcat(infostring, "INVALID  ");  
+    strcat(infostring, "--  ");  
   }
 
   if (gps.time.isValid()) {
@@ -109,6 +109,6 @@ void getGPSInfo() {
     itoa(gps.time.centisecond(), buff, 10);
     strcat(infostring, buff);
   } else {
-    strcat(infostring, "INVALID.");  
+    strcat(infostring, "--.");  
   }
 }
